@@ -23,9 +23,6 @@ make
 ./pendballoon
 ```
 
-Todo:
- - [x] Get graphics working
- - [x] Get physics working
- - [x] Simulate a (double) pendulum
- - [ ] Simulate a pendulum with balloon attached
- - [ ] Figure out why Chipmunk is modelling energy dissipation
+## Todo:
+ - Simulate a pendulum with balloon attached
+ - Figure out why Chipmunk is modelling energy dissipation
