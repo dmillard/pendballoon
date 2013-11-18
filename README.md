@@ -8,7 +8,7 @@ pendballoon simulation
 
 ## Download/Compilation/Usage:
 
-```
+```bash
 # acquire files
 git clone https://github.com/dmillard/pendballoon.git`
 # change to file directory
