@@ -26,9 +26,11 @@ int main(int argc, char **argv) {
 
     // physical settings
     double rod_length = 150.f;
+    double initPendAngle = 0.f;
+    double initBalloonAngle = 0.f;
 
     // chipmunk setup
-    cpVect gravity = cpv(0, 500);
+    cpVect gravity = cpv(0, 750);
     cpSpace *space = cpSpaceNew();
     cpSpaceSetGravity(space, gravity);
 
@@ -50,19 +52,19 @@ int main(int argc, char **argv) {
     rodFixedPend.setPosition(fixed_x, fixed_y);
 
     // pendulum
+    // physical
+    cpFloat pendMass = 5;
+    cpFloat pendMoment = cpMomentForCircle(pendMass, joint_radius, 0, cpvzero);
+    cpBody *pendBody = cpBodyNew(pendMass, pendMoment);
+    cpVect pendDir = cpv(std::sin(D2R(initPendAngle)), std::cos(D2R(initPendAngle)));
+    cpBodySetPos(pendBody, cpv(fixed_x, fixed_y) + cpvmult(pendDir, rod_length));
+    cpSpaceAddBody(space, pendBody);
     // visual
     sf::CircleShape pend(joint_radius);
     pend.setOrigin(joint_radius, joint_radius);
     pend.setFillColor(foreground);
     pend.setOutlineThickness(-line_width);
     pend.setOutlineColor(outline);
-    pend.setPosition(fixed_x, fixed_y + rod_length);
-    // physical
-    cpFloat pendMass = 5;
-    cpFloat pendMoment = cpMomentForCircle(pendMass, joint_radius, 0, cpvzero);
-    cpBody *pendBody = cpBodyNew(pendMass, pendMoment);
-    cpBodySetPos(pendBody, cpv(fixed_x, fixed_y + rod_length));
-    cpSpaceAddBody(space, pendBody);
     // attachment
     cpConstraint *pinPendFixed = cpPinJointNew(space->staticBody, pendBody, cpv(fixed_x, fixed_y), cpvzero);
     cpSpaceAddConstraint(space, pinPendFixed);
@@ -85,7 +87,8 @@ int main(int argc, char **argv) {
     cpFloat balloonMass = 5;
     cpFloat balloonMoment = cpMomentForCircle(balloonMass, joint_radius, 0, cpvzero);
     cpBody *balloonBody = cpBodyNew(balloonMass, balloonMoment);
-    cpBodySetPos(balloonBody, cpv(fixed_x, fixed_y + 2*rod_length));
+    cpVect balloonDir = cpv(std::sin(D2R(initBalloonAngle)), -std::cos(D2R(initBalloonAngle)));
+    cpBodySetPos(balloonBody, cpBodyGetPos(pendBody) + cpvmult(balloonDir, rod_length));
     cpSpaceAddBody(space, balloonBody);
     // attachment
     cpConstraint *pinBalloonPend = cpPinJointNew(pendBody, balloonBody, cpvzero, cpvzero);
