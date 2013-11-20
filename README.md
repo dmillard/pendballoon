@@ -1,10 +1,9 @@
 pendballoon simulation
 ----------------------
 
-## Required libraries:
+## Required build tools
 
- - SFML (www.sfml-dev.org)
- - Chipmunk (www.chipmunk-physics.net)
+ - cmake (http://www.cmake.org, or your local package manager)
 
 ## Download/Compilation/Usage:
 
@@ -17,7 +16,7 @@ cd pendballoon
 mkdir build && cd build
 # generate build files
 cmake ..
-# build project
+# build project and libraries
 make
 # run simulation
 ./pendballoon
@@ -25,4 +24,3 @@ make
 
 ## Todo:
  - Simulate a pendulum with balloon attached
- - Figure out why Chipmunk is modelling energy dissipation

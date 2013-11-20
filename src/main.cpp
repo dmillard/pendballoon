@@ -5,7 +5,7 @@
 #include <SFML/Graphics.hpp>
 
 // chipmunk physics headers
-#include <chipmunk.h>
+#include <chipmunk/chipmunk.h>
 #include <cmath>
 
 // degree <-> radian helper macros
