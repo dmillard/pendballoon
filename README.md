@@ -7,6 +7,8 @@ pendballoon simulation
 
 ## Download/Compilation/Usage:
 
+### Linux 
+
 ```bash
 # acquire files
 git clone https://github.com/dmillard/pendballoon.git`
