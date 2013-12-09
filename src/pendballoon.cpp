@@ -11,6 +11,8 @@
 // degree <-> radian helper macros
 #define D2R(a) (3.141592 * (a) / 180.0)
 #define R2D(a) (180.0 * (a) / 3.141592)
+#define dsin(a) (std::sin(D2R(a)))
+#define dcos(a) (std::cos(D2R(a)))
 
 int main(int argc, char **argv) {
     // superficial settings
@@ -20,85 +22,88 @@ int main(int argc, char **argv) {
     sf::Color foreground(0xff, 0xff, 0xff);
     sf::Color background(0xc0, 0xc0, 0xc0);
     sf::Color outline(0x00, 0x00, 0x00);
-    double fixed_x = 300, fixed_y = 300;
-    double joint_radius = 30.f;
-    double line_width = 10.f;
+    double jointRadius = 30.f;
+    double lineWidth = 10.f;
 
     // physical settings
-    double rod_length = 150.f;
-    double initPendAngle = 0.f;
-    double initBalloonAngle = 0.f;
+    cpVect fixedPos = cpv(300, 300);
+    double rodLength = 150.f;
+    double initPendAngle = 90.f;
+    double initBalloonAngle = 90.f;
+    double buoyancy = 5000;
+    double gravity = 500;
+    double drag = 1;
 
     // chipmunk setup
-    cpVect gravity = cpv(0, 750);
     cpSpace *space = cpSpaceNew();
-    cpSpaceSetGravity(space, gravity);
+    cpSpaceSetGravity(space, cpv(0, gravity));
 
     // create window
     sf::RenderWindow window(video_mode, win_title, sf::Style::Default, settings);
 
     // fixed point
-    sf::RectangleShape fixed(sf::Vector2f(2*joint_radius, joint_radius));
-    fixed.setOrigin(joint_radius, joint_radius/2);
+    sf::RectangleShape fixed(sf::Vector2f(2*jointRadius, jointRadius));
+    fixed.setOrigin(jointRadius, jointRadius/2);
     fixed.setFillColor(foreground);
-    fixed.setOutlineThickness(-line_width);
+    fixed.setOutlineThickness(-lineWidth);
     fixed.setOutlineColor(outline);
-    fixed.setPosition(fixed_x, fixed_y);
+    fixed.setPosition(fixedPos.x, fixedPos.y);
 
     // rod from fixed point to pendulum
-    sf::RectangleShape rodFixedPend(sf::Vector2f(line_width, rod_length));
-    rodFixedPend.setOrigin(line_width/2, 0);
+    sf::RectangleShape rodFixedPend(sf::Vector2f(lineWidth, rodLength));
+    rodFixedPend.setOrigin(lineWidth/2, 0);
     rodFixedPend.setFillColor(outline);
-    rodFixedPend.setPosition(fixed_x, fixed_y);
+    rodFixedPend.setPosition(fixedPos.x, fixedPos.y);
 
     // pendulum
     // physical
-    cpFloat pendMass = 5;
-    cpFloat pendMoment = cpMomentForCircle(pendMass, joint_radius, 0, cpvzero);
+    cpFloat pendMass = 1;
+    cpFloat pendMoment = cpMomentForCircle(pendMass, jointRadius, 0, cpvzero);
     cpBody *pendBody = cpBodyNew(pendMass, pendMoment);
     cpVect pendDir = cpv(std::sin(D2R(initPendAngle)), std::cos(D2R(initPendAngle)));
-    cpBodySetPos(pendBody, cpv(fixed_x, fixed_y) + cpvmult(pendDir, rod_length));
+    cpBodySetPos(pendBody, fixedPos + cpvmult(pendDir, rodLength));
     cpSpaceAddBody(space, pendBody);
     // visual
-    sf::CircleShape pend(joint_radius);
-    pend.setOrigin(joint_radius, joint_radius);
+    sf::CircleShape pend(jointRadius);
+    pend.setOrigin(jointRadius, jointRadius);
     pend.setFillColor(foreground);
-    pend.setOutlineThickness(-line_width);
+    pend.setOutlineThickness(-lineWidth);
     pend.setOutlineColor(outline);
     // attachment
-    cpConstraint *pinPendFixed = cpPinJointNew(space->staticBody, pendBody, cpv(fixed_x, fixed_y), cpvzero);
+    cpConstraint *pinPendFixed = cpPinJointNew(space->staticBody, pendBody, fixedPos, cpvzero);
     cpSpaceAddConstraint(space, pinPendFixed);
 
     // rod from pendulum to balloon
-    sf::RectangleShape rodPendBalloon(sf::Vector2f(line_width, rod_length));
-    rodPendBalloon.setOrigin(line_width/2, 0);
+    sf::RectangleShape rodPendBalloon(sf::Vector2f(lineWidth, rodLength));
+    rodPendBalloon.setOrigin(lineWidth/2, 0);
     rodPendBalloon.setFillColor(outline);
-    rodPendBalloon.setPosition(fixed_x, fixed_y + rod_length);
+    rodPendBalloon.setPosition(fixedPos.x, fixedPos.y + rodLength);
 
     // balloon
     // visual
-    sf::CircleShape balloon(joint_radius);
-    balloon.setOrigin(joint_radius, joint_radius);
+    sf::CircleShape balloon(jointRadius);
+    balloon.setOrigin(jointRadius, jointRadius);
     balloon.setFillColor(foreground);
-    balloon.setOutlineThickness(-line_width);
+    balloon.setOutlineThickness(-lineWidth);
     balloon.setOutlineColor(outline);
-    balloon.setPosition(fixed_x, fixed_y + 2*rod_length);
+    balloon.setPosition(fixedPos.x, fixedPos.y + 2*rodLength);
     // physical
-    cpFloat balloonMass = 5;
-    cpFloat balloonMoment = cpMomentForCircle(balloonMass, joint_radius, 0, cpvzero);
+    cpFloat balloonMass = 1;
+    cpFloat balloonMoment = cpMomentForCircle(balloonMass, jointRadius, 0, cpvzero);
     cpBody *balloonBody = cpBodyNew(balloonMass, balloonMoment);
-    cpVect balloonDir = cpv(std::sin(D2R(initBalloonAngle)), -std::cos(D2R(initBalloonAngle)));
-    cpBodySetPos(balloonBody, cpBodyGetPos(pendBody) + cpvmult(balloonDir, rod_length));
+    cpVect balloonBuoy = cpv(0, -gravity - buoyancy);
+    cpBodySetForce(balloonBody, balloonBuoy);
+    cpVect balloonDir = cpv(dsin(initBalloonAngle), -dcos(initBalloonAngle));
+    cpBodySetPos(balloonBody, cpBodyGetPos(pendBody) + cpvmult(balloonDir, rodLength));
     cpSpaceAddBody(space, balloonBody);
     // attachment
     cpConstraint *pinBalloonPend = cpPinJointNew(pendBody, balloonBody, cpvzero, cpvzero);
     cpSpaceAddConstraint(space, pinBalloonPend);
 
-    cpBodyApplyImpulse(pendBody, cpv(-5000, 0), cpvzero);
-    cpBodyApplyImpulse(balloonBody, cpv(5000, 0), cpvzero);
+    //cpBodyApplyImpulse(pendBody, cpv(-1000, 0), cpvzero);
+    cpBodyApplyImpulse(balloonBody, cpv(0, 1000), cpvzero);
 
     // event and physics loop
-    cpVect fixedPos = cpv(fixed_x, fixed_y);
     cpFloat timeStep = 1.0/60.0;
     while(window.isOpen()) {
         // handle sfml events
@@ -129,13 +134,17 @@ int main(int argc, char **argv) {
         window.clear(background);
         window.draw(rodFixedPend);
         window.draw(rodPendBalloon);
+        window.draw(fixed);
         window.draw(pend);
         window.draw(balloon);
-        window.draw(fixed);
         window.display();
 
         // step physics engine
         cpSpaceStep(space, timeStep);
+        
+        // apply drag
+        cpVect balloonVel = cpBodyGetVel(balloonBody);
+        cpBodySetForce(balloonBody, balloonBuoy + cpvmult(balloonVel, -drag));
     }
 
     return 0;
